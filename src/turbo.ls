@@ -10,6 +10,8 @@ window.state = state
 login = require 'login'
 app = require 'app'
 navbar = require 'navbar'
+actionpad = require 'actionpad'
+require('keybindings')
 
 if module.hot then
   module.hot.accept 'login', ->
@@ -21,6 +23,11 @@ if module.hot then
   module.hot.accept 'navbar', ->
     navbar := require 'navbar'
     m.redraw!
+  module.hot.accept 'actionpad', ->
+    actionpad := require 'actionpad'
+    m.redraw!
+  module.hot.accept 'keybindings', ->
+    require('keybindings')
 
 Main =
   page: ->
@@ -34,6 +41,7 @@ Main =
   view: (c) -> m 'div.turbo.flex.column', [
     navbar.view!
     @page!
+    if state.actionpad! then actionpad.view!
   ]
 
 m.mount document.body, Main

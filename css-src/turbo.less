@@ -3,6 +3,8 @@
 @import "variables";
 @import "bootstrap/bootstrap";
 @import "bootswatch";
+@import "markers";
+@import "actionpad";
 
 img.avatar-tiny {
     width: 30px;
@@ -39,7 +41,7 @@ div.app-tabs {
     }
 }
 
-.main-pane, .secondary-pane {
+.main-pane, .popout-pane {
     margin: 0px;
     padding: 0.5em;
     flex: 1;
@@ -54,6 +56,7 @@ div.channel {
         flex-flow: column nowrap;
 
         div.channel-top {
+            flex: 0 0 5em;
         }
 
         div.channel-chat {
@@ -61,6 +64,11 @@ div.channel {
         }
 
         div.channel-bottom {
+            flex: 0 0 5em;
+
+            &.double {
+                flex: 0 0 10em;
+            }
         }
     }
     div.channel-users {

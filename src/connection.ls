@@ -4,25 +4,45 @@ wsUrl = 'wss://chat.f-list.net:9799'
 
 ws = null
 
+linkRx = /https?:\/\/[^\]\s]+/g
+
 pushMessage = (type, msg) ->
-  msg = _.merge msg, { type: type }
+  msg = _.merge msg, { type: type, timestamp: new Date! }
   msgs = state.messages!
   msgs.push msg
   state.messages msgs
 
+detectLinks = (msg, target) ->
+  links = msg.message.match linkRx
+  if links?
+    tlinks = target.links!
+    links = links.map (l) ->
+      link: l
+      from: msg.character
+    .concat(tlinks).slice(0, 5)
+    target.links links
+
 pushChannel = (channel, type, msg) ->
-  msg = _.merge msg, { type: type }
-  msgs = state.chat.channels[channel].logs!
+  msg = _.merge msg, { type: type, timestamp: new Date! }
+  target = state.chat.channels[channel]
+  msgs = target.logs!
   if msgs?
+    detectLinks msg, target
     msgs.push msg
-    state.chat.channels[channel].logs msgs
+    if state.currentTab!.name != channel
+      target.unread target.unread! + 1
+    target.logs msgs
 
 pushIM = (character, type, msg) ->
-  msg = _.merge msg, { type: type }
-  msgs = state.chat.ims[character].logs!
+  msg = _.merge msg, { type: type, timestamp: new Date! }
+  target = state.chat.ims[character]
+  msgs = target.logs!
   if msgs?
+    detectLinks msg, target
     msgs.push msg
-    state.chat.ims[character].logs msgs
+    if state.currentTab!.name != character
+      target.unread target.unread! + 1
+    target.logs msgs
 
 chat = state.chat
 
@@ -135,6 +155,8 @@ msgHandlers =
           users: m.prop []
           owner: m.prop null
           logs: m.prop []
+          links: m.prop []
+          unread: m.prop 0
         c := chat.channels[msg.channel]
       t = _.find state.tabs!, (tab) -> tab.type == 'channel' and tab.name == msg.channel
       if not t?
@@ -142,10 +164,13 @@ msgHandlers =
         tabs.push do
           type: 'channel'
           name: msg.channel
+          onclose: (t) -> conn.send 'LCH', channel: t.name
         state.tabs tabs
+      if not state.currentTab!?
+        state.currentTab t
     # we joined OR someone else joined
     if c?
-      c.users _.union(c.users!, [msg.character])
+      c.users _.union(c.users!, [msg.character.identity])
   KID: (msg) ->
     # received kinks data
     # TODO process kinks data
@@ -201,6 +226,8 @@ msgHandlers =
     if not chat.ims[msg.character]?
       chat.ims[msg.character] =
         logs: m.prop []
+        links: m.prop []
+        unread: m.prop 0
 
     # TODO optimize tab finding
     t = _.find state.tabs!, (tab) -> tab.type == 'im' and tab.name == msg.character
@@ -210,6 +237,8 @@ msgHandlers =
         type: 'im'
         name: msg.character
       state.tabs tabs
+    if not state.currentTab!?
+      state.currentTab t
     pushIM msg.character, 'm', msg
   MSG: (msg) ->
     # received channel message

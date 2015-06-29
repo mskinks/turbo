@@ -14,8 +14,10 @@ tagmap =
   b: (c, s, p) -> '<b>' + c + '</b>'
   i: (c, s, p) -> '<i>' + c + '</i>'
   url: (c, s, p) ->
-    domain = p.match(/^https?:\/\/(.+)[\/$]/)?[1] or 'unknown domain'
+    domain = p.match(/^https?:\/\/([\w-.]+)/)?[1] or 'unknown domain'
     '<a href="' + p + '" target="_blank">' + c + ' <span class="small">[' + domain + ']</span></a>'
+  sub: (c, s, p) -> '<sub>' + c + '</sub>'
+  sup: (c, s, p) -> '<sup>' + c + '</sup>'
 
 tagrx = /\[(\w+)=?([^\]]*)\]/
 
@@ -23,16 +25,15 @@ nextValid = (str) ->
   pos = 0
   next = null
   while next == null and pos < str.length - 1
-    console.log "next:", next
-    console.log "pos:", pos
-    console.log "str:", str.substring(pos)
     next := tagrx.exec str.substring(pos)
     if next != null
       if _.has(tagmap, next[1]) == false
-        pos := next.index + next[0].length
+        pos := pos + next.index + next[0].length
         next := null
     else
       break
+  if next?
+    next.index = pos + next.index
   return next
 
 bbcodeRec = (bb, stack) ->
@@ -53,8 +54,6 @@ bbcodeRec = (bb, stack) ->
   return beforeTag +
     tagmap[next[1]](bbcodeRec(insideTag, stack.concat(next[1])), stack, next[2]) +
     bbcodeRec(afterTag, stack)
-
-window.bbcodeRec = bbcodeRec
 
 module.exports = (bb) -> bbcodeRec bb, []
 

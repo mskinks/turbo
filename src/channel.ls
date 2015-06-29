@@ -1,6 +1,8 @@
 # channel.ls -- reusable component for a chat channel.
 
 require! state
+require! moment
+
 bbcode = require 'bbcode'
 conn = require 'connection'
 r = require 'renderables'
@@ -15,17 +17,32 @@ if module.hot
 
 renderMessage = (msg) ->
   if msg.type == 'm'
-    return m 'div.message', [
+    return m 'div.message',
+      key: msg.character + '-' + msg.timestamp.getTime!
+    , [
+      m 'span.timestamp', '[' + moment(msg.timestamp).format('HH:mm') + ']'
       m 'span.user', m 'a',
         href: 'https://www.f-list.net/c/' + msg.character
+        target: '_blank'
       , msg.character
       m 'span.message', m.trust bbcode msg.message
     ]
 
 pushLog = (logs, type, msg) ->
   ls = logs!
-  ls.push _.merge(msg, { type: type })
+  ls.push _.merge(msg, { type: type, timestamp: new Date! })
   logs ls
+
+scrollChat = (el, init, ctx) ->
+  if el.scrollTop == 0
+    el.scrollTop = el.scrollHeight
+    return
+  div = el.firstChild
+  last = div.lastChild
+  if last?
+    if div.scrollHeight - (el.scrollTop + el.offsetHeight) - div.lastChild.offsetHeight < 10
+      last.scrollIntoView false
+      return
 
 # a thing that manages the rendering, displaying of chatlines, text area etc
 # for a channel.
@@ -40,18 +57,18 @@ Channel = (name) ->
   return do
     view: (c) -> m 'div.channel.max', [
       m 'div.channel-main', [
-        m 'div.channel-top', [
+        m 'div.channel-top.scroll', m 'div', [
           m 'p', m.trust bbcode chan.description!
         ]
-        m 'div.channel-chat.scroll', m 'div',
+        m 'div.channel-chat.scroll',
+          config: scrollChat
+        , m 'div',
           logs!.map renderMessage
         m 'div.channel-bottom', [
           m 'textarea.form-control',
             value: typed!
-            onkeyup: (ev) ->
-              if ev.keyCode != 13
-                typed ev.target.value
-              else if ev.keyCode == 13
+            onkeydown: (ev) ->
+              if ev.keyCode == 13
                 msg =
                   character: state.character!
                   channel: name
@@ -59,9 +76,14 @@ Channel = (name) ->
                 conn.send 'MSG', msg
                 pushLog logs, 'm', msg
                 typed ''
+            onkeyup: (ev) ->
+              if ev.keyCode != 13
+                typed ev.target.value
+              else
+                ev.target.value = ''
         ]
       ]
-      m 'div.channel-users.scroll', m 'ul.user-list', users!.map r.user
+      m 'div.channel-users.scroll', m 'div.user-list', users!.map r.user
     ]
 
 # a thing that manages a user IM.
@@ -77,15 +99,14 @@ IM = (name) ->
         m 'div.channel-top', [
           m 'h4', user.name
         ]
-        m 'div.channel-chat.scroll', m 'div',
+        m 'div.channel-chat.scroll',
+          config: scrollChat
+        , m 'div',
           logs!.map renderMessage
         m 'div.channel-bottom', [
           m 'textarea.form-control',
-            value: typed!
-            onkeyup: (ev) ->
-              if ev.keyCode != 13
-                typed ev.target.value
-              else if ev.keyCode == 13
+            onkeydown: ->
+              if ev.keyCode == 13
                 msg =
                   character: state.character!
                   recipient: name
@@ -93,6 +114,11 @@ IM = (name) ->
                 conn.send 'PRI', msg
                 pushLog logs, 'm', msg
                 typed ''
+            onkeyup: (ev) ->
+              if ev.keyCode != 13
+                typed ev.target.value
+              else
+                ev.target.value = ''
         ]
       ]
     ]

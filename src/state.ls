@@ -6,6 +6,9 @@ module.exports =
   messages: m.prop []
   tabs: m.prop []
   currentTab: m.prop null
+  popout: m.prop null
+  focus: m.prop 'tabs'
+  actionpad: m.prop false
   chat:
     usercount: m.prop 0
     status: m.prop null
