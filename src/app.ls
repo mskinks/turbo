@@ -32,7 +32,7 @@ unreadTab = (tab, target) ->
           return false
       , 'X'
     ]
-    m 'h5', tab.title
+    m 'h5', if tab.type == 'channel' then tab.title else tab.name
   ]
 
 defaultTab = (tab) ->

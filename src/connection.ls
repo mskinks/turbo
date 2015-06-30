@@ -1,53 +1,23 @@
 # connection.ls -- communication with the server
 
+require! settings
 ui = require 'ui'
+logs = require 'logging'
 if module.hot
   module.hot.accept 'ui', ->
     ui := require 'ui'
+  module.hot.accept 'logging', ->
+    logs := require 'logging'
 
 wsUrl = 'wss://chat.f-list.net:9799'
 
 ws = null
-
-linkRx = /https?:\/\/[^\]\s]+/g
 
 pushMessage = (type, msg) ->
   msg = _.merge msg, { type: type, timestamp: new Date! }
   msgs = state.messages!
   msgs.push msg
   state.messages msgs
-
-detectLinks = (msg, target) ->
-  links = msg.message.match linkRx
-  if links?
-    tlinks = target.links!
-    links = links.map (l) ->
-      link: l
-      from: msg.character
-    .concat(tlinks).slice(0, 6)
-    target.links links
-
-pushChannel = (channel, type, msg) ->
-  msg = _.merge msg, { type: type, timestamp: new Date! }
-  target = state.chat.channels[channel]
-  msgs = target.logs!
-  if msgs?
-    detectLinks msg, target
-    msgs.push msg
-    if state.currentTab!.name != channel
-      target.unread target.unread! + 1
-    target.logs msgs
-
-pushIM = (character, type, msg) ->
-  msg = _.merge msg, { type: type, timestamp: new Date! }
-  target = state.chat.ims[character]
-  msgs = target.logs!
-  if msgs?
-    detectLinks msg, target
-    msgs.push msg
-    if state.currentTab!.name != character
-      target.unread target.unread! + 1
-    target.logs msgs
 
 chat = state.chat
 
@@ -82,19 +52,19 @@ msgHandlers =
     c = chat.channels[msg.channel]
     if c?
       c.users _.without(c.users, msg.character)
-      pushChannel msg.channel, 'ban', msg
+      logs.log 'channel', msg.channel, 'ban', msg
   CKU: (msg) ->
     # user kicked from channel
     c = chat.channels[msg.channel]
     if c?
       c.users _.without(c.users, msg.character)
-      pushChannel msg.channel, 'kick', msg
+      logs.log 'channel', msg.channel, 'kick', msg
   COA: (msg) ->
     # user promoted to chanop
     c = chat.channels[msg.channel]
     if c?
       c.ops _.union(c.ops!, [msg.character])
-      pushChannel msg.channel, 'op-add', msg
+      logs.log 'channel', msg.channel, 'op-add', msg
   COL: (msg) ->
     # list of channel ops
     c = chat.channels[msg.channel]
@@ -110,19 +80,19 @@ msgHandlers =
     c = chat.channels[msg.channel]
     if c?
       c.ops _.without(c.ops!, msg.character)
-      pushChannel msg.channel, 'op-remove', msg
+      logs.log 'channel', msg.channel, 'op-remove', msg
   CSO: (msg) ->
     # set channel owner
     c = chat.channels[msg.channel]
     if c?
       c.owner msg.character
-      pushChannel msg.channel, 'owner-change', msg
+      logs.log 'channel', msg.channel, 'owner-change', msg
   CTU: (msg) ->
     # user timed out from channel
     c = chat.channels[msg.channel]
     if c?
       c.users _.without(c.users, msg.character)
-      pushChannel msg.channel, 'timeout', msg
+      logs.log 'channel', msg.channel, 'timeout', msg
   DOP: (msg) ->
     # gobal op has been removed
     chat.ops _.without(chat.ops!, msg.character)
@@ -226,10 +196,10 @@ msgHandlers =
         links: m.prop []
         unread: m.prop 0
     ui.openTab type: 'im', name: msg.character, true
-    pushIM msg.character, 'm', msg
+    logs.log 'im', msg.character, 'm', msg
   MSG: (msg) ->
     # received channel message
-    pushChannel msg.channel, 'm', msg
+    logs.log 'channel', msg.channel, 'm', msg
   LRP: (msg) ->
     # received roleplaying ad
     # TODO handle ads

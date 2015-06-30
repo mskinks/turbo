@@ -6,6 +6,7 @@ require! moment
 bbcode = require 'bbcode'
 conn = require 'connection'
 r = require 'renderables'
+logging = require 'logging'
 
 if module.hot
   module.hot.accept 'renderables', ->
@@ -14,6 +15,8 @@ if module.hot
   module.hot.accept 'bbcode', ->
     bbcode := require 'bbcode'
     m.redraw!
+  module.hot.accept 'logging', ->
+    logging := require 'logging'
 
 renderMessage = (msg) ->
   user = state.chat.characters[msg.character] or { name: name }
@@ -25,11 +28,6 @@ renderMessage = (msg) ->
       r.user user
       m 'span.message', m.trust bbcode msg.message
     ]
-
-pushLog = (logs, type, msg) ->
-  ls = logs!
-  ls.push _.merge(msg, { type: type, timestamp: new Date! })
-  logs ls
 
 scrollChat = (el, init, ctx) ->
   if el.scrollTop == 0
@@ -72,7 +70,7 @@ Channel = (name) ->
                   channel: name
                   message: typed!
                 conn.send 'MSG', msg
-                pushLog logs, 'm', msg
+                logging.log 'channel', name, 'm', msg
                 typed ''
             onkeyup: (ev) ->
               if ev.keyCode != 13
@@ -83,6 +81,8 @@ Channel = (name) ->
       ]
       m 'div.channel-users.scroll', m 'div.user-list', users!.map r.user
     ]
+
+# TODO see if we can merge or inherit channel and IM renderers
 
 # a thing that manages a user IM.
 IM = (name) ->
@@ -103,14 +103,14 @@ IM = (name) ->
           logs!.map renderMessage
         m 'div.channel-bottom', [
           m 'textarea.form-control',
-            onkeydown: ->
-              if ev.keyCode == 13
+            onkeydown: (ev) ->
+              if ev.keyCode == 13 and typed!.length > 0
                 msg =
                   character: state.character!
                   recipient: name
                   message: typed!
                 conn.send 'PRI', msg
-                pushLog logs, 'm', msg
+                logging.log 'im', name, 'm', msg
                 typed ''
             onkeyup: (ev) ->
               if ev.keyCode != 13

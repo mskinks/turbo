@@ -58,6 +58,13 @@ preActions =
     * name: 'Open PM'
       explain: 'Send Private Message.'
       action: ->
+        if not state.chat.ims[as.primary!]?
+          state.chat.ims[as.primary!] =
+            logs: m.prop []
+            links: m.prop []
+            unread: m.prop 0
+        ui.openTab type: 'im', name: as.primary!, true
+        return true
     * name: 'Ignore'
       explain: 'Ignore this character.'
       action: ->
@@ -94,7 +101,7 @@ dynamicActions =
     _(state.tabs!)
     .filter (tab) -> tab != state.currentTab!
     .map (tab) ->
-      name: tab.name
+      name: if tab.type == 'channel' then tab.title else tab.name
       type: 'Chat Tab'
       explain: 'Switch to this tab.'
       action: -> state.currentTab tab
@@ -251,6 +258,7 @@ module.exports =
               el.focus!
           onkeyup: m.withAttr 'value', as.input
           onkeydown: controlKeys
+          placeholder: 'Type -> Enter'
       ]
       m 'div.actions-container',
         config: (el, init, ctx) ->
