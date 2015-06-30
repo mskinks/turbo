@@ -16,15 +16,13 @@ if module.hot
     m.redraw!
 
 renderMessage = (msg) ->
+  user = state.chat.characters[msg.character] or { name: name }
   if msg.type == 'm'
     return m 'div.message',
       key: msg.character + '-' + msg.timestamp.getTime!
     , [
       m 'span.timestamp', '[' + moment(msg.timestamp).format('HH:mm') + ']'
-      m 'span.user', m 'a',
-        href: 'https://www.f-list.net/c/' + msg.character
-        target: '_blank'
-      , msg.character
+      r.user user
       m 'span.message', m.trust bbcode msg.message
     ]
 
@@ -65,7 +63,7 @@ Channel = (name) ->
         , m 'div',
           logs!.map renderMessage
         m 'div.channel-bottom', [
-          m 'textarea.form-control',
+          m 'textarea.form-control.chat-input',
             value: typed!
             onkeydown: (ev) ->
               if ev.keyCode == 13

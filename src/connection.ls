@@ -1,5 +1,10 @@
 # connection.ls -- communication with the server
 
+ui = require 'ui'
+if module.hot
+  module.hot.accept 'ui', ->
+    ui := require 'ui'
+
 wsUrl = 'wss://chat.f-list.net:9799'
 
 ws = null
@@ -19,7 +24,7 @@ detectLinks = (msg, target) ->
     links = links.map (l) ->
       link: l
       from: msg.character
-    .concat(tlinks).slice(0, 5)
+    .concat(tlinks).slice(0, 6)
     target.links links
 
 pushChannel = (channel, type, msg) ->
@@ -158,16 +163,11 @@ msgHandlers =
           links: m.prop []
           unread: m.prop 0
         c := chat.channels[msg.channel]
-      t = _.find state.tabs!, (tab) -> tab.type == 'channel' and tab.name == msg.channel
-      if not t?
-        tabs = state.tabs!
-        tabs.push do
-          type: 'channel'
-          name: msg.channel
-          onclose: (t) -> conn.send 'LCH', channel: t.name
-        state.tabs tabs
-      if not state.currentTab!?
-        state.currentTab t
+      ui.openTab do
+        type: 'channel'
+        title: msg.title
+        name: msg.channel
+        onclose: (t) -> ws-send 'LCH', channel: t.name
     # we joined OR someone else joined
     if c?
       c.users _.union(c.users!, [msg.character.identity])
@@ -175,12 +175,9 @@ msgHandlers =
     # received kinks data
     # TODO process kinks data
   LCH: (msg) ->
-    # left a channel
-    if msg.character == state.character!
-      # we left
-      state.tabs _.filter(state.tabs!, (tab) -> tab.type == 'channel' and tab.name == msg.channel)
-      # TODO clean up channel info too?
-    # we left OR someone else left
+    # left a channel (we or someone else)
+    # NOTE tab should already have closed by this point
+    # TODO clean up channel info too?
     c = chat.channels[msg.channel]
     if c?
       c.users _.without(c.users!, msg.character)
@@ -228,17 +225,7 @@ msgHandlers =
         logs: m.prop []
         links: m.prop []
         unread: m.prop 0
-
-    # TODO optimize tab finding
-    t = _.find state.tabs!, (tab) -> tab.type == 'im' and tab.name == msg.character
-    if not t?
-      tabs = state.tabs!
-      tabs.push do
-        type: 'im'
-        name: msg.character
-      state.tabs tabs
-    if not state.currentTab!?
-      state.currentTab t
+    ui.openTab type: 'im', name: msg.character, true
     pushIM msg.character, 'm', msg
   MSG: (msg) ->
     # received channel message

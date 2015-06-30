@@ -1,9 +1,12 @@
 # app.ls -- main chat app
 
 require! channelsearch
+ui = require 'ui'
 channel = require 'channel'
 
 if module.hot
+  module.hot.accept 'ui', ->
+    ui := require 'ui'
   module.hot.accept 'channel', ->
     channel := require 'channel'
     # update all running channel renderers to new code
@@ -12,13 +15,6 @@ if module.hot
         r = new channel.Channel c.name
         c.renderer = r
     m.redraw!
-
-closeTab = (tab) ->
-  if state.currentTab! == tab
-    state.currentTab null
-  if tab.onclose?
-    tab.onclose tab
-  state.tabs _.without(state.tabs!, tab)
 
 unreadTab = (tab, target) ->
   m 'li.tab',
@@ -31,10 +27,12 @@ unreadTab = (tab, target) ->
     m 'div.pull-right', [
       if target.unread! > 0 then m 'span.badge.unread', target.unread!
       m 'a',
-        onclick: -> closeTab tab
+        onclick: ->
+          ui.closeTab tab
+          return false
       , 'X'
     ]
-    m 'h5', tab.name
+    m 'h5', tab.title
   ]
 
 defaultTab = (tab) ->
@@ -47,7 +45,9 @@ defaultTab = (tab) ->
   , [
     m 'div.pull-right', [
       m 'a',
-        onclick: -> closeTab tab
+        onclick: ->
+          ui.closeTab tab
+          return false
       , 'X'
     ]
     m 'h5', tab.name
@@ -63,7 +63,7 @@ tabList = ->
       defaultTab tab
 
 renderTab = (tab) ->
-  if not tab?
+  if not tab? or tab == null
     return m '.greeting', "Welcome to F-Chat."
   if tab.type == 'channels'
     return channelsearch.view!
@@ -84,11 +84,15 @@ renderTab = (tab) ->
   return m 'p', "That's strange. This tab has an unknown type, and cannot be displayed."
 
 module.exports =
-  closeTab: closeTab
   view: (c) ->
     m '.flex.max.row', [
       m 'div.app-tabs', tabList!
-      m 'div.main-pane.flex', renderTab state.currentTab!
-      if state.popout!? then m 'div.popout-pane.flex', renderTab state.popout!
+      m 'div.chat-pane.main-pane.flex',
+        class: if state.focus! == 'tabs' then 'active' else ''
+      , renderTab state.currentTab!
+      if state.popout!?
+        m 'div.chat-pane.popout-pane.flex',
+          class: if state.focus! == 'popout' then 'active' else ''
+        , renderTab state.popout!
     ]
 

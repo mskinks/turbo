@@ -45,6 +45,12 @@ div.app-tabs {
     margin: 0px;
     padding: 0.5em;
     flex: 1;
+    border-left: 1px solid @gray;
+    background: linear-gradient(@gray-darker 20%, mix(@gray-darker, @gray-base, 80%) 100%);
+
+    &.active {
+        background: linear-gradient(@gray-darker 70%, mix(@gray-darker, @brand-primary, 80%) 100%);
+    }
 }
 
 div.channel {

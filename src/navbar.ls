@@ -2,19 +2,13 @@
 
 require! state
 conn = require 'connection'
+require! ui
 
 all-channels = ->
   # open channel tab and refresh channels
-  t = _.find state.tabs!, (tab) -> tab.type == 'channels'
-  if not t?
-    t :=
+  ui.openTab do
       type: 'channels'
       name: 'All Rooms'
-    tabs = state.tabs!
-    tabs.unshift t
-    state.tabs tabs
-    m.redraw!
-  state.currentTab t
   # request refreshes
   if not state.chat.allChannels!?
     conn.send 'CHA'

@@ -12,6 +12,7 @@ config.plugins.push(new webpack.HotModuleReplacementPlugin());
 config.plugins.push(new webpack.NoErrorsPlugin());
 
 new WebpackDevServer(webpack(config), {
+    contentBase: './dist',
     publicPath: config.output.publicPath,
     quiet: true,
     hot: true,

@@ -5,8 +5,15 @@ require! fuzzy
 conn = require 'connection'
 app = require 'app'
 
+ui = require 'ui'
+if module.hot
+  module.hot.accept 'ui', ->
+    ui := require 'ui'
+
 as =
   input: m.prop ''
+  oldinput: m.prop ''
+  dynamicActionCache: m.prop []
   selected: m.prop 0
   mode: m.prop 'start'
   primary: m.prop null
@@ -14,23 +21,24 @@ as =
   secondary: m.prop null
 
 availableActions = ->
-  actions = (if dynamicActions[as.mode!] then dynamicActions[as.mode!]! else [])
-  if actionsFor[as.mode!]?
-    actions := actions.concat actionsFor[as.mode!]
+  actions = (if preActions[as.mode!]? then preActions[as.mode!] else [])
+  if dynamicActions[as.mode!]
+    # cache dynamic actions, except if the input changes.
+    if as.input! != as.oldinput!
+      as.dynamicActionCache dynamicActions[as.mode!]!
+      as.oldinput as.input!
+    actions := actions.concat as.dynamicActionCache!
+  if postActions[as.mode!]?
+    actions := actions.concat postActions[as.mode!]
   if as.selected! >= actions.length then as.selected actions.length - 1
-  fuzzy.filter as.input!, actions,
-    pre: '<u>'
-    post: '</u>'
-    extract: (a) -> a.name
-  .map (r) ->
-    o = r.original
-    o.name = r.string
-    return o
+  fs = as.input!.toLowerCase!
+  _.filter actions, (a) -> a.name.toLowerCase!.indexOf(fs) > -1
 
 invoke = (mode, primary, secondary) ->
   if not mode?
     mode := 'start'
   as.input ''
+  as.oldinput null
   as.selected 0
   as.mode mode
   as.primary primary
@@ -40,7 +48,21 @@ invoke = (mode, primary, secondary) ->
     state.actionpad true
     m.redraw!
 
-actionsFor =
+preActions =
+  character:
+    * name: 'F-List Profile'
+      explain: 'View profile for this character.'
+      action: ->
+        window.open 'https://www.f-list.net/c/' + as.primary!
+        return true
+    * name: 'Open PM'
+      explain: 'Send Private Message.'
+      action: ->
+    * name: 'Ignore'
+      explain: 'Ignore this character.'
+      action: ->
+
+postActions =
   start:
     * name: 'Join Channel'
       explain: 'Join a channel.'
@@ -48,11 +70,15 @@ actionsFor =
         invoke 'channels'
         return false
     * name: 'Find Character'
-      explain: 'Pop up character menu.'
+      explain: 'Search online characters.'
       action: ->
+        invoke 'characters'
+        return false
     * name: 'Close This Tab'
       explain: 'Close the current tab.'
       action: ->
+        ui.closeTab ui.currentFocus!
+        return true
 
   channels: [{
     name: 'Refresh Channels'
@@ -92,11 +118,24 @@ dynamicActions =
     if not state.chat.allChannels!?
       conn.send 'CHA'
       conn.send 'ORS'
-      chans.push do
-        name: ''
-        explain: 'Turbo is loading channel data...'
-        action: ->
+      # TODO message about loading channel data
     return chans
+
+  characters: ->
+    chars = if as.input!.length < 3
+      [{ name: '', explain: 'Type at least three letters to start searching.' }]
+    else
+      fs = as.input!.toLowerCase!
+      _(Object.keys(state.chat.characters))
+      .filter (c) -> c.toLowerCase!.indexOf(fs) > -1
+      .map (c) ->
+        name: c
+        type: 'Character'
+        explain: 'Character Actions'
+        action: ->
+          invoke 'character', c
+          return false
+      .value!
 
   channel: ->
     if as.actionCache! then return as.actionCache!
@@ -127,6 +166,7 @@ dynamicActions =
 renderAction = (action, idx) ->
   m '.action',
     class: if idx == as.selected! then 'selected' else ''
+    onmousemove: -> as.selected idx
     onclick: action.action
   , [
     if action.explain?
@@ -142,44 +182,81 @@ renderTarget =
   channels: -> m 'h4', 'Join Channel'
   channel: -> m 'h4', state.chat.allChannels![as.primary!].title
   openlink: -> m 'h4', 'Recent links in ' + state.chat.allChannels![as.primary!].title
+  characters: -> m 'h4', 'Find Character'
+  character: -> m 'h4', as.primary!
 
 controlKeys = (ev) ->
   code = ev.keyCode
-  if code == 38
-    # up
-    if as.selected! > 0
-      as.selected as.selected! - 1
-    return false
-  else if code == 40
-    # down
-    if as.selected! < availableActions!.length - 1
-      as.selected as.selected! + 1
-    return false
-  else if code == 13
+  fix = false
+  if code == 13
     # enter
     action = availableActions![as.selected!]
     uninvoke = action.action!
     ev.target.value = ''
-    if uninvoke then state.actionpad false
+    if uninvoke then dismiss!
     return false
+  else
+    if code == 38
+      # up
+      as.selected as.selected! - 1
+      fix = true
+    else if code == 40
+      # down
+      as.selected as.selected! + 1
+      fix = true
+    else if code == 33
+      # pgup
+      as.selected as.selected! - 6
+      fix = true
+    else if code == 34
+      # pgdn
+      as.selected as.selected! + 6
+      fix = true
+    if fix
+      if as.selected! < 0
+        as.selected availableActions!.length - 1
+      if as.selected! >= availableActions!.length
+        as.selected 0
+      return false
+
+positioningClass = ->
+  if state.popout!? and state.focus! == 'popout'
+    return 'righty'
+  else if state.popout!?
+    return 'lefty'
+  else
+    return ''
+
+dismiss = ->
+  state.actionpad false
+  m.redraw true
+  ui.focusTextInput!
 
 module.exports =
   invoke: invoke
 
-  view: (c) -> m 'div#actionpad', [
-    m 'div.target', renderTarget[as.mode!]!
-    m 'div.input', [
-      m 'input[type=text]',
+  dismiss: dismiss
+
+  view: (c) -> m 'div#ap-container', [
+    m 'div#ap-overlay',
+      onclick: -> dismiss!
+    m 'div#actionpad',
+      class: positioningClass!
+    , [
+      m 'div.target', renderTarget[as.mode!]!
+      m 'div.input', [
+        m 'input[type=text]',
+          config: (el, init, ctx) ->
+            if !init
+              el.focus!
+          onkeyup: m.withAttr 'value', as.input
+          onkeydown: controlKeys
+      ]
+      m 'div.actions-container',
         config: (el, init, ctx) ->
-          if !init
-            el.focus!
-        onkeyup: m.withAttr 'value', as.input
-        onkeydown: controlKeys
+          s = el.querySelector 'div.action.selected'
+          if s?
+            s.scrollIntoView false
+      , m 'div.actions', availableActions!.map renderAction
     ]
-    m 'div.actions-container',
-      config: (el, init, ctx) ->
-        s = el.querySelector 'div.action.selected'
-        if s?
-          s.scrollIntoView false
-    , m 'div.actions', availableActions!.map renderAction
   ]

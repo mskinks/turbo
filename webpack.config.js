@@ -5,7 +5,7 @@ module.exports = {
     entry: "./src/turbo.ls",
     output: {
         path: path.join(__dirname, 'dist'),
-        publicPath: '/static/',
+        publicPath: '/',
         filename: "turbo.js"
     },
     plugins: [
