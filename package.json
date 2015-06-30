@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "node dev_server.js",
-    "dist": "webpack"
+    "dist": "webpack --optimize-minimize"
   },
   "author": "",
   "license": "ISC",

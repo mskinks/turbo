@@ -8,15 +8,26 @@ loginFields =
   user: m.prop null
   password: m.prop null
 
-tryLogin = ->
-  form = new FormData!
-  form.append 'account', loginFields.user!
-  form.append 'password', loginFields.password!
+ticketURL = window.location.href + 'proxy.php'
+logindata = ->
+  return do
+    account: loginFields.user!
+    password: loginFields.password!
 
+if module.hot
+  ticketURL = 'https://www.f-list.net/json/getApiTicket.php'
+
+tryLogin = ->
   m.request do
     method: 'POST'
-    url: 'https://www.f-list.net/json/getApiTicket.php'
-    serialize: -> form
+    url: ticketURL
+    config: (xhr) ->
+      xhr.setRequestHeader "Content-Type", "application/x-www-form-urlencoded"
+    serialize: ->
+      _(logindata!)
+      .pairs!
+      .map (p) -> p[0] + '=' + encodeURIComponent(p[1])
+      .value!.join('&')
   .then (response) ->
     if response.error? and response.error != '' then
       problems [response.error]
