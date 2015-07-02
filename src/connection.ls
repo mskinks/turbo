@@ -3,7 +3,11 @@
 require! settings
 ui = require 'ui'
 logs = require 'logging'
+settings = require 'settings'
+
 if module.hot
+  module.hot.accept 'settings', ->
+    settings := require 'settings'
   module.hot.accept 'ui', ->
     ui := require 'ui'
   module.hot.accept 'logging', ->
@@ -37,13 +41,12 @@ msgHandlers =
   CHA: (msg) ->
     # all channels
     chans = chat.allChannels!
-    if not chans?
-      chans := {}
     msg.channels.forEach (chan) ->
       chan.type = 'channel'
       chan.title = chan.name
       chans[chan.name] = chan
     chat.allChannels chans
+    chat.loadedChannels true
   CIU: (msg) ->
     # invitation received
     pushMessage 'invite', msg
@@ -121,6 +124,16 @@ msgHandlers =
     c = chat.channels[msg.channel]
     if msg.character.identity == state.character!
       # we joined
+      # update allChannels entry to be sure we have latest title
+      # (needed in case we join any channels before titles have been retrieved via ORS/CHA)
+      chans = chat.allChannels!
+      if not chans[msg.channel]?
+        chans[msg.channel] =
+          title: msg.title
+          name: msg.channel
+        chat.allChannels chans
+
+      # create live channel
       if not c?
         chat.channels[msg.channel] =
           description: m.prop ''
@@ -168,6 +181,11 @@ msgHandlers =
       message: null
     if msg.identity == state.character!
       chat.status 'connected'
+      # autojoin
+      aj = settings.get('autojoin')[state.character!]
+      if aj?
+        aj.forEach (ch) ->
+          ws-send 'JCH', channel: ch.name
       m.redraw!
   IGN: (msg) ->
     # ignore list handling
@@ -178,12 +196,11 @@ msgHandlers =
   ORS: (msg) ->
     # open rooms list
     chans = chat.allChannels!
-    if not chans?
-      chans := {}
     msg.channels.forEach (chan) ->
       chan.type = 'room'
       chans[chan.name] = chan
     chat.allChannels chans
+    chat.loadedChannels true
   PRD: (msg) ->
     # short profile data
     # TODO handle profile data

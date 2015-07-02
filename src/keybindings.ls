@@ -32,6 +32,8 @@ key 'ctrl+c', ->
   f = ui.currentFocus!
   if f.type == 'channel'
     actionpad.invoke 'channel', f.name, state.chat.channels[f.name]
+  else if f.type == 'im'
+    actionpad.invoke 'character', f.name
 
 key 'esc', ->
   actionpad.dismiss!

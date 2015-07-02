@@ -10,7 +10,7 @@ all-channels = ->
       type: 'channels'
       name: 'All Rooms'
   # request refreshes
-  if not state.chat.allChannels!?
+  if not state.chat.loadedChannels!
     conn.send 'CHA'
     conn.send 'ORS'
 
@@ -26,12 +26,21 @@ module.exports =
         m 'ul.nav.navbar-nav', [
           m 'li', m 'a',
             onclick: all-channels
-          , 'Rooms'
+          , 'Channels'
           m 'li', m 'a',
             onclick: ->
           , 'Kink Search'
           m 'li', m 'a',
             onclick: ->
+          , 'Ads'
+          m 'li', m 'a',
+            onclick: ->
+          , 'Logs'
+          m 'li', m 'a',
+            onclick: ->
+              ui.openTab do
+                type: 'settings'
+                name: 'Settings'
           , 'Settings'
         ]
     ]

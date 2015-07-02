@@ -3,10 +3,13 @@
 require! channelsearch
 ui = require 'ui'
 channel = require 'channel'
+settings = require 'settings'
 
 if module.hot
   module.hot.accept 'ui', ->
     ui := require 'ui'
+  module.hot.accept 'settings', ->
+    settings := require 'settings'
   module.hot.accept 'channel', ->
     channel := require 'channel'
     # update all running channel renderers to new code
@@ -65,23 +68,26 @@ tabList = ->
 renderTab = (tab) ->
   if not tab? or tab == null
     return m '.greeting', "Welcome to F-Chat."
-  if tab.type == 'channels'
+  else if tab.type == 'channels'
     return channelsearch.view!
-  if tab.type == 'channel'
+  else if tab.type == 'channel'
     state.chat.channels[tab.name].unread 0
     c = state.chat.channels[tab.name].renderer
     if not c?
       c := new channel.Channel tab.name
       state.chat.channels[tab.name].renderer = c
     return c.view!
-  if tab.type == 'im'
+  else if tab.type == 'im'
     state.chat.ims[tab.name].unread 0
     c = state.chat.ims[tab.name].renderer
     if not c?
       c := new channel.IM tab.name
       state.chat.ims[tab.name].renderer = c
     return c.view!
-  return m 'p', "That's strange. This tab has an unknown type, and cannot be displayed."
+  else if tab.type == 'settings'
+    return settings.view!
+  else
+    return m 'p', "That's strange. This tab has an unknown type, and cannot be displayed."
 
 module.exports =
   view: (c) ->

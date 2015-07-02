@@ -12,7 +12,7 @@ joinChannel = (name) ->
     channel: name
 
 refreshChannels = (allprop) ->
-  allprop null
+  allprop {}
   conn.send 'CHA'
   conn.send 'ORS'
 

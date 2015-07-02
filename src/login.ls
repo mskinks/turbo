@@ -2,6 +2,8 @@
 require! state
 conn = require 'connection'
 
+logging = require 'logging'
+
 problems = m.prop []
 
 loginFields =
@@ -16,6 +18,8 @@ logindata = ->
 
 if module.hot
   ticketURL = 'https://www.f-list.net/json/getApiTicket.php'
+  module.hot.accept 'logging', ->
+    logging := require 'logging'
 
 tryLogin = ->
   m.request do
@@ -45,7 +49,7 @@ startChat = (acctname, charname) ->
 module.exports =
   view: (c) -> m '.login-page.columns.centered', [
     m '.panel.login-panel.panel-default', [
-      m '.panel-heading', m 'h4', "Please Sign In"
+      m '.panel-heading', "Please Sign In"
 
       if not state.ticket!? then
         m '.panel-body', [
@@ -88,4 +92,9 @@ module.exports =
             ]
         ]
     ]
+    if not logging.available
+      m '.alert.alert-warning', [
+        m 'h4', "Chat Logging Unavailable"
+        m 'p', "Turbo can't access your browser's datastore to save your chatlogs. That's either because your browser is too old, or because some security feature forbids it. If you want to save logs, please load Turbo in a recent browser (Chrome, Firefox or IE 10 and newer) and turn 'private browsing' (or 'incognito mode') off."
+      ]
   ]

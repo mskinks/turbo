@@ -4,6 +4,7 @@ require! state
 require! fuzzy
 conn = require 'connection'
 app = require 'app'
+settings = require 'settings'
 
 ui = require 'ui'
 if module.hot
@@ -69,6 +70,14 @@ preActions =
       explain: 'Ignore this character.'
       action: ->
 
+  channel: [{
+    name: 'Channel Actions'
+    explain: 'Logging, auto-joining, and so on.'
+    action: ->
+      invoke 'channelactions', as.primary!
+      return false
+  }]
+
 postActions =
   start:
     * name: 'Join Channel'
@@ -85,6 +94,13 @@ postActions =
       explain: 'Close the current tab.'
       action: ->
         ui.closeTab ui.currentFocus!
+        return true
+    * name: 'Turbo Settings'
+      explain: 'Open the settings tab.'
+      action: ->
+        ui.openTab do
+          type: 'settings'
+          name: 'Settings'
         return true
 
   channels: [{
@@ -112,6 +128,7 @@ dynamicActions =
       [{ name: '', explain: 'Type at least three letters to start searching.' }]
     else
       _(state.chat.allChannels!)
+      .values!
       .filter (c) -> c.title.toLowerCase!.indexOf(as.input!.toLowerCase!) > -1
       .sortByOrder 'characters', false
       .map (c) ->
@@ -122,7 +139,7 @@ dynamicActions =
           conn.send 'JCH', channel: c.name
           return true
       .value!
-    if not state.chat.allChannels!?
+    if not state.chat.loadedChannels!
       conn.send 'CHA'
       conn.send 'ORS'
       # TODO message about loading channel data
@@ -161,6 +178,25 @@ dynamicActions =
     as.actionCache actions
     return actions
 
+  channelactions: ->
+    ac = state.chat.allChannels![as.primary!]
+    autojoin = null
+    if _.findIndex(settings.get('autojoin')[state.character!], (c) -> c.name == ac.name) == -1
+      autojoin =
+        name: 'Add to Autojoin'
+        explain: 'Automatically join this channel on login.'
+        action: ->
+          settings.addAutojoin state.character!, ac
+          return true
+    else
+      autojoin =
+        name: 'Remove from Autojoin'
+        explain: 'Don\'t auto-join this channel on login.'
+        action: ->
+          settings.removeAutojoin state.character!, ac
+          return true
+    return [autojoin]
+
   openlink: ->
     as.secondary!.links!.map (l) ->
       return do
@@ -191,6 +227,7 @@ renderTarget =
   openlink: -> m 'h4', 'Recent links in ' + state.chat.allChannels![as.primary!].title
   characters: -> m 'h4', 'Find Character'
   character: -> m 'h4', as.primary!
+  channelactions: -> m 'h4', 'Actions for ' + state.chat.allChannels![as.primary!].title
 
 controlKeys = (ev) ->
   code = ev.keyCode
@@ -258,7 +295,6 @@ module.exports =
               el.focus!
           onkeyup: m.withAttr 'value', as.input
           onkeydown: controlKeys
-          placeholder: 'Type -> Enter'
       ]
       m 'div.actions-container',
         config: (el, init, ctx) ->
