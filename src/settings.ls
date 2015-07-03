@@ -12,6 +12,10 @@ template = ->
     logging: 'ims'
     alwaysLog: []
     alwaysLogNames: []
+    adMode: 'tab'
+    adblockChannels: []
+    adblockCharacters: []
+    adblockGenders: []
 
 settings = m.prop template!
 
@@ -59,24 +63,53 @@ removeAutojoin = (char, channel) ->
     set 'autojoin', aj
   save!
 
-justSaved = m.prop false
+addAdblock = (what) ->
+  if what.title
+    # it's a channel
+    cs = get 'adblockChannels'
+    cs.push what
+    set 'adblockChannels', cs
+  else
+    cs = get 'adblockCharacters'
+    cs.push what
+    set 'adblockCharacters', cs
 
-module.exports =
-  get: get
-  set: set
-  save: save
-  addAutojoin: addAutojoin
-  removeAutojoin: removeAutojoin
-  propFor: (key) ->
-    return (val) ->
-      s = settings!
-      if val?
-        s[key] = value
-        s.saved = false
-        settings s
-      else
-        return s[key]
-  view: (c) -> m '.settings', [
+removeAdblock = (what) ->
+  if what.title
+    # it's a channel
+    cs = get 'adblockChannels'
+    cs = _.reject cs, (c) -> c.name == what.name
+    set 'adblockChannels', cs
+  else
+    cs = get 'adblockCharacters'
+    cs = _.without cs, what
+    set 'adblockCharacters', cs
+
+input = (key, label, numeric = false) ->
+  m '.form-group', [
+    m 'label', label
+    m 'input[type.text].form-control',
+      value: get key
+      onchange: (e) ->
+        if numeric
+          n = parseInt(e.target.value)
+          if not n.isNan! and n >= 0
+            set key, n
+        else
+          set key, e.target.value
+  ]
+
+radio = (key, val, label) ->
+  m '.radio', m 'label', [
+    m 'input[type=radio]',
+      value: 'channel'
+      checked: get(key) == val
+      onchange: -> set key, val
+    m 'span', label
+  ]
+
+view-tabs =
+  autojoin: -> [
     m 'h3', 'Autojoin'
     m 'p', 'Turbo will automatically join the following channels on login:'
     m '.autojoin', _.pairs(settings!.autojoin).map (p) ->
@@ -92,66 +125,47 @@ module.exports =
           ]
       ]
     m 'p.small', 'You can add a channel to this list via its Action Pad (press Ctrl-C or click the popup icon while in the channel).'
+  ]
 
+  messages: -> [
     m 'h3', 'Buffers and Messages'
-    m '.form-group', [
-      m 'label', 'Tabs keep this many lines for scrollback:'
-      m 'input[type.text].form-control',
-        value: get 'scrollback'
-        onchange: (e) ->
-          n = parseInt(e.target.value)
-          if not n.isNan! and n >= 0
-            set 'scrollback', n
-    ]
-    m '.form-group', [
-      m 'label', 'Tabs remember this many links for the Recent Links pad (Ctrl-O):'
-      m 'input[type.text].form-control',
-        value: get 'recentLinks'
-        onchange: (e) ->
-          n = parseInt(e.target.value)
-          if not n.isNan! and n >= 0
-            set 'recentLinks', n
-    ]
-    m '.form-group', [
-      m 'label', 'The Ad tab keeps this many ads:'
-      m 'input[type.text].form-control',
-        value: get 'recentAds'
-        onchange: (e) ->
-          n = parseInt(e.target.value)
-          if not n.isNan! and n >= 0
-            set 'recentAds', n
-    ]
-    m '.form-group', [
-      m 'label', 'Messages display their time stamps like this:'
-      m 'input[type.text].form-control',
-        value: get 'timeFormat'
-        onchange: (e) ->
-          set 'timeFormat', e.target.value
-    ]
+    input 'scrollback', 'Tabs keep this many lines for scrollback:', true
+    input 'recentLinks', 'Tabs remember this many links for the Recent Links pad (Ctrl-O):', true
+    input 'timeFormat', 'Messages display their time stamps like this:'
+  ]
 
+  ads: -> [
+    m 'h3', 'Ads'
+    m 'p', 'How do you like your LFRP ads?'
+    radio 'adMode', 'all', 'Show them in channels and collect them in the Ad tab'
+    radio 'adMode', 'tab', 'Ad tab only'
+    radio 'adMode', 'none', 'Don\'t show any ads'
+    input 'recentAds', 'The Ad tab keeps this many ads:', true
+    m 'p', 'Always block ads in these channels:'
+    m '.adblock-channel', settings!.adblockChannels.map (ch) ->
+      m '.channel', [
+        m '.pull-right', m 'button.btn.btn-xs.btn-danger',
+          onclick: -> removeAdblock ch
+        , 'Remove'
+        m 'span', ch.title
+      ]
+    m 'p', 'Always block ads from these characters:'
+    m '.adblock-character', settings!.adblockCharacters.map (cr) ->
+      m '.character', [
+        m '.pull-right', m 'button.btn.btn-xs.btn-danger',
+          onclick: -> removeAdblock cr
+        , 'Remove'
+        m 'span', cr
+      ]
+    m 'p.small', 'Add channels or characters from their Action Pad (Ctrl-C / popup icon).'
+  ]
+
+  logging: -> [
     m 'h3', 'Logging'
     m 'p', 'Turbo will keep logs of:'
-    m '.radio', m 'label', [
-      m 'input[type=radio]',
-        value: 'all'
-        checked: get('logging') == 'all'
-        onchange: -> set 'logging', 'all'
-      m 'span', 'Everything'
-    ]
-    m '.radio', m 'label', [
-      m 'input[type=radio]',
-        value: 'ims'
-        checked: get('logging') == 'ims'
-        onchange: -> set 'logging', 'ims'
-      m 'span', 'Private Messages'
-    ]
-    m '.radio', m 'label', [
-      m 'input[type=radio]',
-        value: 'none'
-        checked: get('logging') == 'none'
-        onchange: -> set 'logging', 'none'
-      m 'span', 'Nothing'
-    ]
+    radio 'logging', 'all', 'Everything'
+    radio 'logging', 'ims', 'Private Messages'
+    radio 'logging', 'none', 'Nothing'
     m 'p', 'And no matter what you set above, Turbo will ALWAYS log:'
     m '.autojoin-channels', settings!.alwaysLog.map (ch) ->
       m '.channel', [
@@ -161,6 +175,36 @@ module.exports =
         m 'span', if c.type == 'channel' then c.title else c.name
       ]
     m 'p.small', 'You can add channels or characters to this list, or save logs for the running session only, from their Action Pad (Ctrl-C while viewing the tab, or click the popup icon).'
+  ]
+
+selectedTab = m.prop 'autojoin'
+justSaved = m.prop false
+module.exports =
+  get: get
+  set: set
+  save: save
+  addAutojoin: addAutojoin
+  removeAutojoin: removeAutojoin
+  addAdblock: addAdblock
+  removeAdblock: removeAdblock
+  propFor: (key) ->
+    return (val) ->
+      s = settings!
+      if val?
+        s[key] = value
+        s.saved = false
+        settings s
+      else
+        return s[key]
+  view: (c) -> m '.settings', [
+    m 'ul.nav.nav-pills', Object.keys(view-tabs).map (tab) ->
+      m 'li',
+        class: if tab == selectedTab! then 'active' else ''
+      , m 'a',
+        onclick: -> selectedTab tab
+      , tab.charAt(0).toUpperCase! + tab.slice(1)
+
+    m '.tab-view', view-tabs[selectedTab!]!
 
     m 'button.btn.btn-primary',
       onclick: ->

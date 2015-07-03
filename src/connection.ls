@@ -257,7 +257,9 @@ msgHandlers =
     # TODO handle server uptime info
   VAR: (msg) ->
     # server variables
-    # TODO handle server variables
+    vars = state.vars!
+    vars[msg.variable] = msg.value
+    state.vars vars
 
 handleMessage = (srvmsg) ->
   srvmsg = srvmsg.data
