@@ -5,11 +5,14 @@ require! fuzzy
 conn = require 'connection'
 app = require 'app'
 settings = require 'settings'
-
+logging = require 'logging'
 ui = require 'ui'
+
 if module.hot
   module.hot.accept 'ui', ->
     ui := require 'ui'
+  module.hot.accept 'logging', ->
+    logging := require 'logging'
 
 as =
   input: m.prop ''
@@ -180,22 +183,60 @@ dynamicActions =
 
   channelactions: ->
     ac = state.chat.allChannels![as.primary!]
-    autojoin = null
+    options = []
     if _.findIndex(settings.get('autojoin')[state.character!], (c) -> c.name == ac.name) == -1
-      autojoin =
+      options.push do
         name: 'Add to Autojoin'
         explain: 'Automatically join this channel on login.'
         action: ->
           settings.addAutojoin state.character!, ac
           return true
     else
-      autojoin =
+      options.push do
         name: 'Remove from Autojoin'
         explain: 'Don\'t auto-join this channel on login.'
         action: ->
           settings.removeAutojoin state.character!, ac
           return true
-    return [autojoin]
+
+    isAlwaysLog = false
+    if _.findIndex(settings.get('alwaysLog'), (c) -> c.name == ac.name) == -1
+      options.push do
+        name: 'Always Log'
+        explain: 'Always log this channel no matter the logging settings.'
+        action: ->
+          settings.addAlwaysLog do
+            name: ac.name
+            title: ac.title
+          logging.addScrollback ac
+          return true
+    else
+      isAlwaysLog = true
+      options.push do
+        name: 'Remove from Always Log'
+        explain: 'Use the default logging settings for this channel.'
+        action: ->
+          settings.removeAlwaysLog ac
+          return true
+
+    if (settings.get('logging') == 'none' or settings.get('logging') == 'ims') and !isAlwaysLog
+      if state.chat.logging!.indexOf(ac.name) == -1
+        options.push do
+          name: 'Log Channel'
+          explain: 'Log this channel (current session only).'
+          action: ->
+            state.chat.logging state.chat.logging!.concat(ac.name)
+            logging.addScrollback ac
+            return true
+      else
+        options.push do
+          name: 'Stop Logging'
+          explain: 'Stop logging this channel.'
+          action: ->
+            state.chat.logging _.without state.chat.logging!, ac.name
+            return true
+
+    return options
 
   openlink: ->
     as.secondary!.links!.map (l) ->

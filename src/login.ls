@@ -46,6 +46,11 @@ startChat = (acctname, charname) ->
   state.chat.status "connecting"
   conn.connect acctname, charname
 
+# check db status after 300ms (give it time to open)
+setTimeout ->
+  m.redraw!
+, 300
+
 module.exports =
   view: (c) -> m '.login-page.columns.centered', [
     m '.panel.login-panel.panel-default', [
@@ -92,7 +97,7 @@ module.exports =
             ]
         ]
     ]
-    if not logging.available
+    if not logging.available!
       m '.alert.alert-warning', [
         m 'h4', "Chat Logging Unavailable"
         m 'p', "Turbo can't access your browser's datastore to save your chatlogs. That's either because your browser is too old, or because some security feature forbids it. If you want to save logs, please load Turbo in a recent browser (Chrome, Firefox or IE 10 and newer) and turn 'private browsing' (or 'incognito mode') off."

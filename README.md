@@ -1,6 +1,6 @@
 # Turbo
 
-F-Chat web client that goes vroom. Provides desktop-like speed and comfort thanks to the newest browser technologies. Requires IE10 or later, current Firefox, or current Chrome. Safari might work, but Apple has been bad about supporting the latest web standards, so some parts of Turbo probably won't function as expected.
+F-Chat web client that goes vroom. Provides desktop-like speed and comfort thanks to the newest browser technologies. Requires a recent browser-- older ones will likely not be supported.
 
 ## Contribution Guidelines
 

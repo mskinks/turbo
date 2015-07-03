@@ -73,6 +73,7 @@ addAdblock = (what) ->
     cs = get 'adblockCharacters'
     cs.push what
     set 'adblockCharacters', cs
+  save!
 
 removeAdblock = (what) ->
   if what.title
@@ -84,6 +85,19 @@ removeAdblock = (what) ->
     cs = get 'adblockCharacters'
     cs = _.without cs, what
     set 'adblockCharacters', cs
+  save!
+
+addAlwaysLog = (what) ->
+  cs = get 'alwaysLog'
+  cs.push what
+  set 'alwaysLog', cs
+  save!
+
+removeAlwaysLog = (what) ->
+  cs = get 'alwaysLog'
+  cs = _.reject cs, (c) -> c.name == what.name
+  set 'alwaysLog', cs
+  save!
 
 input = (key, label, numeric = false) ->
   m '.form-group', [
@@ -167,12 +181,12 @@ view-tabs =
     radio 'logging', 'ims', 'Private Messages'
     radio 'logging', 'none', 'Nothing'
     m 'p', 'And no matter what you set above, Turbo will ALWAYS log:'
-    m '.autojoin-channels', settings!.alwaysLog.map (ch) ->
-      m '.channel', [
+    m '.alwayslogs', settings!.alwaysLog.map (ch) ->
+      m '.alwayslog', [
         m '.pull-right', m 'button.btn.btn-xs.btn-danger',
-          onclick: -> set 'alwaysLog', _.remove(get('alwaysLog'), (ac) -> ac.name == ch.name)
+          onclick: -> removeAlwaysLog ch
         , 'Remove'
-        m 'span', if c.type == 'channel' then c.title else c.name
+        m 'span', if ch.type == 'channel' then ch.title else ch.name
       ]
     m 'p.small', 'You can add channels or characters to this list, or save logs for the running session only, from their Action Pad (Ctrl-C while viewing the tab, or click the popup icon).'
   ]
@@ -187,6 +201,8 @@ module.exports =
   removeAutojoin: removeAutojoin
   addAdblock: addAdblock
   removeAdblock: removeAdblock
+  addAlwaysLog: addAlwaysLog
+  removeAlwaysLog: removeAlwaysLog
   propFor: (key) ->
     return (val) ->
       s = settings!

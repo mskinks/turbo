@@ -12,9 +12,9 @@ F-Chat web client that goes vroom.
 
 ## Requirements
 
-Turbo uses a lot of the newest Web technology to make all of this work. That means you'll need a reasonably modern browser to use it. IE10 or newer, Firefox or Google Chrome should work. Apple has not been good about keeping up lately, so Safari might or might not work. If you're having problems with Safari, you're on your own!
+Turbo uses a lot of the newest Web technology to make all of this work. That means you'll need a reasonably modern browser to use it. Firefox or Chrome work best, since they are usually the most up-to-date. On Safari and Internet Explorer (10 or newer), chatting should work fine, but log management may be buggy.
 
-Other than a recent browser, you don't need anything!
+Other than a recent non-buggy browser, you don't need anything! If you don't have one of those, please use the (slower) official F-List web chat slient instead. Turbo is built for speed, and trying to support old browsers slows it down.
 
 ## The Action Pad
 

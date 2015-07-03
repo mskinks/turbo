@@ -23,7 +23,7 @@ module.exports =
     msg_flood: 0.5
     permissions: 0
   chat:
-    logging: m.prop settings.get 'alwaysLog'
+    logging: m.prop []
     usercount: m.prop 0
     status: m.prop null
     ops: m.prop null
