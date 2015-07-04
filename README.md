@@ -2,6 +2,10 @@
 
 F-Chat web client that goes vroom. Provides desktop-like speed and comfort thanks to the newest browser technologies. Requires a recent browser-- older ones will likely not be supported.
 
+[Start Chatting!](https://mskinks.github.io/turbo/)
+
+(Above: Infrequently updated development version until Turbo is ready for prime time. May not work for you unless you disable certain browser security features-- this is due to a problem with F-List logins that I hope will get fixed soon.)
+
 ## Contribution Guidelines
 
 Turbo probably needs the most help in making it look nicer without hurting the speed (so, LESS/CSS designers wanted). Turbo's goals are, in descending order:
