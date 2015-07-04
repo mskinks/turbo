@@ -6,6 +6,7 @@
 # s - the current position in the parsing stack (use to check if within some other tag)
 # p - (optional) parameter
 tagmap =
+  noparse: (c, s, p) -> c
   color: (c, s, p) ->
     if p?
       '<span style="color:"' + p + ';">' + c + '</span>'
@@ -41,6 +42,8 @@ bbcodeRec = (bb, stack) ->
     return ''
   if stack.length > 10
     return bb
+  if stack[0] == 'noparse'
+    return '<span class="noparse">' + bb + '</span>'
   next = nextValid bb
   if not next?
     return bb
@@ -51,8 +54,9 @@ bbcodeRec = (bb, stack) ->
   beforeTag = bb.substring(0, next.index)
   afterTag = bb.substring(end + closing.length)
   insideTag = bb.substring(next.index + next[0].length, end)
+
   return beforeTag +
-    tagmap[next[1]](bbcodeRec(insideTag, stack.concat(next[1])), stack, next[2]) +
+    tagmap[next[1]](bbcodeRec(insideTag, [next[1]].concat(stack)), stack, next[2]) +
     bbcodeRec(afterTag, stack)
 
 module.exports = (bb) -> bbcodeRec bb, []
