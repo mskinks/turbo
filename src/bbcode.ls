@@ -14,11 +14,13 @@ tagmap =
       c
   b: (c, s, p) -> '<b>' + c + '</b>'
   i: (c, s, p) -> '<i>' + c + '</i>'
+  eicon: (c, s, p) -> '<img src="https://static.f-list.net/images/eicon/' + c.toLowerCase! + '.gif" class="eicon">'
   url: (c, s, p) ->
     domain = p.match(/^https?:\/\/([\w-.]+)/)?[1] or 'unknown domain'
     '<a href="' + p + '" target="_blank">' + c + ' <span class="small">[' + domain + ']</span></a>'
   sub: (c, s, p) -> '<sub>' + c + '</sub>'
   sup: (c, s, p) -> '<sup>' + c + '</sup>'
+  channel: (c, s, p) -> '<a href="#channel/' + c + '" class="channel-link">' + c + '</a>'
 
 tagrx = /\[(\w+)=?([^\]]*)\]/
 

@@ -4,12 +4,18 @@ require! channelsearch
 ui = require 'ui'
 channel = require 'channel'
 settings = require 'settings'
+logviewer = require 'logviewer'
+urlactions = require 'urlactions'
 
 if module.hot
   module.hot.accept 'ui', ->
     ui := require 'ui'
   module.hot.accept 'settings', ->
     settings := require 'settings'
+  module.hot.accept 'logviewer', ->
+    logviewer := require 'logviewer'
+  module.hot.accept 'urlactions', ->
+    urlactions := require 'urlactions'
   module.hot.accept 'channel', ->
     channel := require 'channel'
     # update all running channel renderers to new code
@@ -66,10 +72,8 @@ tabList = ->
       defaultTab tab
 
 renderTab = (tab) ->
-  if not tab? or tab == null
+  if not tab?
     return m '.greeting', "Welcome to F-Chat."
-  else if tab.type == 'channels'
-    return channelsearch.view!
   else if tab.type == 'channel'
     state.chat.channels[tab.name].unread 0
     c = state.chat.channels[tab.name].renderer
@@ -84,8 +88,12 @@ renderTab = (tab) ->
       c := new channel.IM tab.name
       state.chat.ims[tab.name].renderer = c
     return c.view!
+  else if tab.type == 'logs'
+    return logviewer.view!
   else if tab.type == 'settings'
     return settings.view!
+  else if tab.type == 'channels'
+    return channelsearch.view!
   else
     return m 'p', "That's strange. This tab has an unknown type, and cannot be displayed."
 
