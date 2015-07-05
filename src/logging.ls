@@ -7,8 +7,17 @@ if module.hot
   module.hot.accept 'settings', ->
     settings := require 'settings'
 
+# helper functions for putting log data together
+checkLogDay = (ix, range, day, resultmap) ->
+  creq = ix.count(range)
+  creq.onsuccess = ->
+    resultmap[day] = creq.result
+
 # detect if logging facilities (indexedDB) are available
-# if so, open the database for access.
+# if so, open the database for access, set everything up,
+# and return a safe-ish database interface, hiding the details.
+# yes, this is pretty gnarly code. maybe a FIXME, but maybe not
+# (performance etc).
 available = true
 db = null
 batchLogs = []
@@ -19,9 +28,11 @@ if window.indexedDB and db == null
     db = ev.target.result
     chlogs = db.createObjectStore 'channels', keyPath: 'key'
     chlogs.createIndex 'logs', ['on', 'channel', 'timestamp'], unique: false
+    chlogs.createIndex 'targets', ['on', 'channel'], unique: false
     chlogs.createIndex 'tags', 'tags', unique: false
     crlogs = db.createObjectStore 'ims', keyPath: 'key'
-    chlogs.createIndex 'logs', ['on', 'with', 'timestamp'], unique: false
+    crlogs.createIndex 'logs', ['on', 'with', 'timestamp'], unique: false
+    crlogs.createIndex 'targets', ['on', 'with'], unique: false
     crlogs.createIndex 'tags', 'tags', unique: false
   dbo.onerror = (e) ->
     console.log e
@@ -61,10 +72,10 @@ if window.indexedDB and db == null
           log.with = target
         log.on = state.character!
         batchLogs.push _.omit log, 'type'
-      getIndexUniques: (osName, index, recvProp) ->
-        tx = innerDB.transaction ['channels', 'ims']
+      getLogTargets: (osName, recvProp) ->
+        tx = innerDB.transaction [osName]
         os = tx.objectStore osName
-        ix = os.index index
+        ix = os.index 'targets'
         uniqs = []
         ix.openKeyCursor(null, 'nextunique').onsuccess = (ev) ->
           c = ev.target.result
@@ -72,8 +83,59 @@ if window.indexedDB and db == null
             uniqs.push c.key
             c.continue!
           else
-            recvProp uniqs
-      fetchLogs: (query) ->
+            recvProp _.pluck uniqs, 1
+
+      getLogMonth: (osName, character, target, year, month, recvf) ->
+        KeyRange = window.IDBKeyRange
+        current = new Date year, month, 1
+        last = new Date year, month + 1, 0
+
+        daymap = {}
+        tx = innerDB.transaction [osName]
+        os = tx.objectStore osName
+        ix = os.index 'logs'
+        tx.oncomplete = ->
+          recvf daymap
+
+        # what this does: because of IDB limitations but thanks to its high
+        # concurrency, we step through the month day by day and for every day
+        # we fire off a request to get the number of logs for that day
+        # (asynchronously). those get added to the daymap. tx.oncomplete
+        # is called by the transaction when the last callback finishes.
+        #
+        # FIXME: this is hopefully pretty performant. check and if not so,
+        # add another index. :/
+        while current <= last
+          next = new Date current.getTime!
+          next.setDate(next.getDate! + 1)
+          range = KeyRange.bound [character, target, current],
+            [character, target, next], false, true
+
+          # it's current.getDate! - 1 because the processing will be 0-based
+          # whereas javascript DAY dates are 1-based (for some reason months
+          # are 0-based again...)
+          checkLogDay ix, range, (current.getDate! - 1), daymap
+          current = next
+
+      getLogs: (osName, character, target, date, recvf) ->
+        upper = new Date date.getTime!
+        upper.setDate(upper.getDate! + 1)
+        tx = innerDB.transaction [osName]
+        os = tx.objectStore osName
+        ix = os.index 'logs'
+        range = window.IDBKeyRange.bound [character, target, date],
+          [character, target, upper], false, true
+
+        logs = []
+        ocr = ix.openCursor range
+        ocr.onsuccess = (ev) ->
+          cursor = ev.target.result
+          if cursor?
+            logs.push cursor.value
+            cursor.continue!
+          else
+            recvf logs
+
 
     available := true
 else
@@ -125,23 +187,21 @@ log = (kind, targetName, type, msg) ->
       db.queueLog (kind == 'channel'), (title or targetName), msg
     target.logs msgs
 
-getOn = (prop) ->
-  prop []
-  db.getIndexUniques 'channels', 'on', (u) -> prop _.union(prop!, u)
-  db.getIndexUniques 'ims', 'on', (u) -> prop _.union(prop!, u)
+getLogTargets = (type, prop) ->
+  prop null
+  db.getLogTargets type, prop
 
-getIMs = (prop) ->
-  db.getIndexUniques 'ims', 'with', prop
+getLogMonth = (osName, character, target, year, month, recvf) ->
+  db.getLogMonth ...
 
-getChannels = (prop) ->
-  db.getIndexUniques 'channels', 'channel', prop
+getLogs = (osName, character, target, date, recvf) ->
+  db.getLogs ...
 
 module.exports =
   log: log
   addScrollback: addScrollback
-  getOn: getOn
-  getIMs: getIMs
-  getChannels: getChannels
+  getLogTargets: getLogTargets
+  getLogMonth: getLogMonth
+  getLogs: getLogs
   available: -> available
 
-window.logging = module.exports

@@ -14,6 +14,33 @@ all-channels = ->
     conn.send 'CHA'
     conn.send 'ORS'
 
+when-connected = [
+  m 'li', m 'a',
+    onclick: all-channels
+  , 'Channels'
+  m 'li', m 'a',
+    onclick: ->
+  , 'Kink Search'
+  m 'li', m 'a',
+    onclick: ->
+  , 'Ads'
+]
+
+always = [
+  m 'li', m 'a',
+    onclick: ->
+      ui.openTab do
+        type: 'logs'
+        name: 'Logs'
+  , 'Logs'
+  m 'li', m 'a',
+    onclick: ->
+      ui.openTab do
+        type: 'settings'
+        name: 'Settings'
+  , 'Settings'
+]
+
 module.exports =
   view: (c) ->
     m 'nav.navbar.navbar-default', [
@@ -22,26 +49,8 @@ module.exports =
           href: '#'
         , "Turbo"
       ]
-      if state.chat.status! == 'connected'
-        m 'ul.nav.navbar-nav', [
-          m 'li', m 'a',
-            onclick: all-channels
-          , 'Channels'
-          m 'li', m 'a',
-            onclick: ->
-          , 'Kink Search'
-          m 'li', m 'a',
-            onclick: ->
-          , 'Ads'
-          m 'li', m 'a',
-            onclick: ->
-          , 'Logs'
-          m 'li', m 'a',
-            onclick: ->
-              ui.openTab do
-                type: 'settings'
-                name: 'Settings'
-          , 'Settings'
-        ]
+      m 'ul.nav.navbar-nav', [
+        if state.chat.status! == 'connected' then always.concat when-connected else always
+      ]
     ]
 

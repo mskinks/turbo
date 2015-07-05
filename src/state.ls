@@ -1,11 +1,5 @@
 # state.ls -- contains global application state
 
-settings = require 'settings'
-
-if module.hot
-  module.hot.accept 'settings', ->
-    settings := require 'settings'
-
 module.exports =
   ticket: m.prop null
   character: m.prop null

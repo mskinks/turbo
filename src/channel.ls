@@ -1,7 +1,6 @@
 # channel.ls -- reusable component for a chat channel.
 
 require! state
-require! moment
 
 bbcode = require 'bbcode'
 conn = require 'connection'
@@ -21,17 +20,6 @@ if module.hot
   module.hot.accept 'settings', ->
     settings := require 'settings'
 
-renderMessage = (tf, msg) ->
-  user = state.chat.characters[msg.character] or { name: name }
-  if msg.type == 'm'
-    return m 'div.message',
-      key: msg.character + '-' + msg.timestamp.getTime!
-    , [
-      m 'span.timestamp', '[' + moment(msg.timestamp).format(tf) + ']'
-      r.user user
-      m 'span.message', m.trust bbcode msg.message
-    ]
-
 scrollChat = (el, init, ctx) ->
   if el.scrollTop == 0
     el.scrollTop = el.scrollHeight
@@ -40,12 +28,13 @@ scrollChat = (el, init, ctx) ->
   last = div.lastChild
   if last?
     if div.scrollHeight - (el.scrollTop + el.offsetHeight) - div.lastChild.offsetHeight < 10
-      last.scrollIntoView false
+      el.scrollTop = el.scrollHeight
       return
 
 # a thing that manages the rendering, displaying of chatlines, text area etc
 # for a channel.
 Channel = (name) ->
+  title = state.chat.allChannels![name].title
   chan = state.chat.channels[name]
   logs = chan.logs
   users = ->
@@ -55,10 +44,11 @@ Channel = (name) ->
 
   return do
     view: (c) ->
-      rm = (msg) -> renderMessage settings.get('timeFormat'), msg
+      rm = (msg) -> r.message settings.get('timeFormat'), msg
       m 'div.channel.max', [
         m 'div.channel-main', [
           m 'div.channel-top.scroll', m 'div', [
+            m 'h4', title
             m 'p', m.trust bbcode chan.description!
           ]
           m 'div.channel-chat.scroll',
@@ -98,7 +88,7 @@ IM = (name) ->
 
   return do
     view: (c) ->
-      rm = (msg) -> renderMessage settings.get('timeFormat'), msg
+      rm = (msg) -> r.message settings.get('timeFormat'), msg
       m 'div.channel.max', [
         m 'div.channel-main', [
           m 'div.channel-top', [

@@ -153,7 +153,7 @@ view-tabs =
     m 'p', 'How do you like your LFRP ads?'
     radio 'adMode', 'all', 'Show them in channels and collect them in the Ad tab'
     radio 'adMode', 'tab', 'Ad tab only'
-    radio 'adMode', 'none', 'Don\'t show any ads'
+    radio 'adMode', 'none', 'I don\'t want to see any ads anywhere'
     input 'recentAds', 'The Ad tab keeps this many ads:', true
     m 'p', 'Always block ads in these channels:'
     m '.adblock-channel', settings!.adblockChannels.map (ch) ->
@@ -177,8 +177,8 @@ view-tabs =
   logging: -> [
     m 'h3', 'Logging'
     m 'p', 'Turbo will keep logs of:'
-    radio 'logging', 'all', 'Everything'
-    radio 'logging', 'ims', 'Private Messages'
+    radio 'logging', 'all', 'Everything (Channels + PMs)'
+    radio 'logging', 'ims', 'Private Messages only'
     radio 'logging', 'none', 'Nothing'
     m 'p', 'And no matter what you set above, Turbo will ALWAYS log:'
     m '.alwayslogs', settings!.alwaysLog.map (ch) ->
