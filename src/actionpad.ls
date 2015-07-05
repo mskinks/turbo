@@ -81,6 +81,16 @@ preActions =
       return false
   }]
 
+  debug: [{
+    name: 'All Known Characters'
+    explain: ''
+    action: ->
+      ui.openTab do
+        type: 'characters'
+        name: 'All Characters'
+      return true
+  }]
+
 postActions =
   start:
     * name: 'Join Channel'
@@ -88,7 +98,7 @@ postActions =
       action: ->
         invoke 'channels'
         return false
-    * name: 'Find Character'
+    * name: 'Find Character / PM'
       explain: 'Search online characters.'
       action: ->
         invoke 'characters'
@@ -265,10 +275,11 @@ renderTarget =
   start: -> m 'h4', '>> Turbo'
   channels: -> m 'h4', 'Join Channel'
   channel: -> m 'h4', state.chat.allChannels![as.primary!].title
-  openlink: -> m 'h4', 'Recent links in ' + state.chat.allChannels![as.primary!].title
+  openlink: -> m 'h4', 'Recent links'
   characters: -> m 'h4', 'Find Character'
   character: -> m 'h4', as.primary!
   channelactions: -> m 'h4', 'Actions for ' + state.chat.allChannels![as.primary!].title
+  debug: -> m 'h4', 'Debug Tools' 
 
 controlKeys = (ev) ->
   code = ev.keyCode

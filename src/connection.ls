@@ -104,7 +104,7 @@ msgHandlers =
     pushMessage 'error', msg
   FKS: (msg) ->
     # kinks search results
-    # TODO implement kinks search
+    state.kinksearchresults msg
   FLN: (msg) ->
     # character went offline
     chat.channels.forEach (chan) ->

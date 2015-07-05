@@ -12,7 +12,6 @@ window.onhashchange = (ev) ->
   p = decodeURIComponent(hash[1])
   if act == 'channel'
     t = _.find state.tabs!, (t) -> t.type == 'channel' and t.name == p
-    console.log t
     if t?
       state.currentTab t
       m.redraw!

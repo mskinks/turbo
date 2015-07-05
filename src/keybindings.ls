@@ -35,6 +35,10 @@ key 'ctrl+c', ->
   else if f.type == 'im'
     actionpad.invoke 'character', f.name
 
+key 'ctrl+shift+d', ->
+  actionpad.invoke 'debug'
+  return false
+
 key 'esc', ->
   actionpad.dismiss!
 

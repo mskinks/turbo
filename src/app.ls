@@ -6,6 +6,10 @@ channel = require 'channel'
 settings = require 'settings'
 logviewer = require 'logviewer'
 urlactions = require 'urlactions'
+kinksearch = require 'kinksearch'
+
+# this is for debug, don't hot reload
+require! characters
 
 if module.hot
   module.hot.accept 'ui', ->
@@ -16,6 +20,8 @@ if module.hot
     logviewer := require 'logviewer'
   module.hot.accept 'urlactions', ->
     urlactions := require 'urlactions'
+  module.hot.accept 'kinksearch', ->
+    kinksearch := require 'kinksearch'
   module.hot.accept 'channel', ->
     channel := require 'channel'
     # update all running channel renderers to new code
@@ -94,6 +100,10 @@ renderTab = (tab) ->
     return settings.view!
   else if tab.type == 'channels'
     return channelsearch.view!
+  else if tab.type == 'kinksearch'
+    return kinksearch.view!
+  else if tab.type == 'characters'
+    return characters.view!
   else
     return m 'p', "That's strange. This tab has an unknown type, and cannot be displayed."
 

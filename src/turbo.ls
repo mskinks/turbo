@@ -34,7 +34,11 @@ Main =
     if state.chat.status! == 'connected'
       return app.view!
     else if state.chat.status! == 'connecting'
-      return m '.connecting', "Connecting! Please wait."
+      return m '.connecting', [
+        m 'div.whee',
+          style: 'background: url(https://static.f-list.net/images/avatar/' + encodeURIComponent(state.character!.toLowerCase!) + '.png) no-repeat;'
+        m 'h4', 'Connecting... please wait.'
+      ]
     else
       return login.view!
 
@@ -43,5 +47,7 @@ Main =
     @page!
     if state.actionpad! then actionpad.view!
   ]
+
+window.m = m
 
 m.mount document.body, Main

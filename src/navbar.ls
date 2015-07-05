@@ -8,7 +8,7 @@ all-channels = ->
   # open channel tab and refresh channels
   ui.openTab do
       type: 'channels'
-      name: 'All Rooms'
+      name: 'All Channels'
   # request refreshes
   if not state.chat.loadedChannels!
     conn.send 'CHA'
@@ -20,6 +20,9 @@ when-connected = [
   , 'Channels'
   m 'li', m 'a',
     onclick: ->
+      ui.openTab do
+        type: 'kinksearch'
+        name: 'Kink Search'
   , 'Kink Search'
   m 'li', m 'a',
     onclick: ->

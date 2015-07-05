@@ -9,6 +9,7 @@ module.exports =
   popout: m.prop null
   focus: m.prop 'tabs'
   actionpad: m.prop false
+  kinksearchresults: m.prop null
   vars: m.prop do
     chat_max: 4096
     priv_max: 50000
