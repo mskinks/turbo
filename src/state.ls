@@ -25,7 +25,7 @@ module.exports =
     friends: m.prop []
     channels: {}
     ims: {}
-    typing: {}
+    recentAds: m.prop []
     allChannels: m.prop {}
     loadedChannels: m.prop false
     characters: {}

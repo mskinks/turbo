@@ -1,7 +1,5 @@
 # navbar.ls -- navbar at the top of the chat
 
-require! state
-conn = require 'connection'
 require! ui
 
 all-channels = ->
@@ -26,6 +24,9 @@ when-connected = [
   , 'Kink Search'
   m 'li', m 'a',
     onclick: ->
+      ui.openTab do
+        type: 'ads'
+        name: 'Ads'
   , 'Ads'
 ]
 

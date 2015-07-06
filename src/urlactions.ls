@@ -1,9 +1,6 @@
 # urlactions.ls -- intra-chat links that cause chat app actions,
 # i.e. clicking on a channel tag to open it.
 
-require! state
-conn = require 'connection'
-
 window.onhashchange = (ev) ->
   if window.location.hash == '' then return
   if not state.chat.status! == 'connected' then return

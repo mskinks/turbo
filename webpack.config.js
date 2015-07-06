@@ -11,8 +11,11 @@ module.exports = {
     plugins: [
         new webpack.ProvidePlugin({
             _: "lodash",
-            m: "mithril"
-        })
+            m: "mithril",
+            state: "state",
+            conn: "connection"
+        }),
+        new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/)
     ],
     resolve: {
         modulesDirectories: ["src", "node_modules"],

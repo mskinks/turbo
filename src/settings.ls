@@ -1,6 +1,8 @@
 # settings.ls -- Turbo settings that can be saved to local application
 # storage.
 
+genders = ["Male","Female","Transgender","Herm","Shemale","Male-Herm","Cunt-boy","None"]
+
 template = ->
   return do
     showUsers: true
@@ -116,10 +118,19 @@ input = (key, label, numeric = false) ->
 radio = (key, val, label) ->
   m '.radio', m 'label', [
     m 'input[type=radio]',
-      value: 'channel'
+      value: val
       checked: get(key) == val
       onchange: -> set key, val
     m 'span', label
+  ]
+
+checkbox = (key, val, label) ->
+  m '.checkbox', m 'label', [
+    m 'input[type=checkbox]',
+      value: val
+      checked: get(key).indexOf(val) != -1
+      onchange: -> set(key, _.xor(get(key), [val]))
+    m 'span', val
   ]
 
 view-tabs =
@@ -155,6 +166,11 @@ view-tabs =
     radio 'adMode', 'tab', 'Ad tab only'
     radio 'adMode', 'none', 'I don\'t want to see any ads anywhere'
     input 'recentAds', 'The Ad tab keeps this many ads:', true
+    m 'hr'
+    m 'p', 'Block ads from characters that are:'
+    m '.genders', genders.map (g) -> checkbox 'adblockGenders', g
+    m 'p.small', '(If you don\'t select anything here, you will receive all ads.)'
+    m 'hr'
     m 'p', 'Always block ads in these channels:'
     m '.adblock-channel', settings!.adblockChannels.map (ch) ->
       m '.channel', [
@@ -163,6 +179,7 @@ view-tabs =
         , 'Remove'
         m 'span', ch.title
       ]
+    m 'hr'
     m 'p', 'Always block ads from these characters:'
     m '.adblock-character', settings!.adblockCharacters.map (cr) ->
       m '.character', [
@@ -193,45 +210,45 @@ view-tabs =
 
 selectedTab = m.prop 'autojoin'
 justSaved = m.prop false
-module.exports =
-  get: get
-  set: set
-  save: save
-  addAutojoin: addAutojoin
-  removeAutojoin: removeAutojoin
-  addAdblock: addAdblock
-  removeAdblock: removeAdblock
-  addAlwaysLog: addAlwaysLog
-  removeAlwaysLog: removeAlwaysLog
-  propFor: (key) ->
-    return (val) ->
-      s = settings!
-      if val?
-        s[key] = value
-        s.saved = false
-        settings s
-      else
-        return s[key]
-  view: (c) -> m '.settings', [
-    m 'ul.nav.nav-pills', Object.keys(view-tabs).map (tab) ->
-      m 'li',
-        class: if tab == selectedTab! then 'active' else ''
-      , m 'a',
-        onclick: -> selectedTab tab
-      , tab.charAt(0).toUpperCase! + tab.slice(1)
 
-    m '.tab-view', view-tabs[selectedTab!]!
+exports.get = get
+exports.set = set
+exports.save = save
+exports.addAutojoin = addAutojoin
+exports.removeAutojoin = removeAutojoin
+exports.addAdblock = addAdblock
+exports.removeAdblock = removeAdblock
+exports.addAlwaysLog = addAlwaysLog
+exports.removeAlwaysLog = removeAlwaysLog
+exports.propFor = (key) ->
+  return (val) ->
+    s = settings!
+    if val?
+      s[key] = value
+      s.saved = false
+      settings s
+    else
+      return s[key]
+exports.view = (c) -> m '.settings', [
+  m 'ul.nav.nav-pills', Object.keys(view-tabs).map (tab) ->
+    m 'li',
+      class: if tab == selectedTab! then 'active' else ''
+    , m 'a',
+      onclick: -> selectedTab tab
+    , tab.charAt(0).toUpperCase! + tab.slice(1)
 
-    m 'button.btn.btn-primary',
-      onclick: ->
-        save!
-        justSaved true
-        setTimeout ->
-          justSaved false
-        , 3000
-    , 'Save Settings'
-    if justSaved!
-      m 'span', 'Settings saved.'
-  ]
+  m '.tab-view', view-tabs[selectedTab!]!
+
+  m 'button.btn.btn-primary',
+    onclick: ->
+      save!
+      justSaved true
+      setTimeout ->
+        justSaved false
+      , 3000
+  , 'Save Settings'
+  if justSaved!
+    m 'span', 'Settings saved.'
+]
 
 

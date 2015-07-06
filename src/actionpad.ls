@@ -1,9 +1,7 @@
 # actionpad.ls -- Turbo's action pad and quick actions.
 
-require! state
-require! fuzzy
-conn = require 'connection'
-app = require 'app'
+# fuzzy search is neat, but maybe too resource intensive
+# require! fuzzy
 settings = require 'settings'
 logging = require 'logging'
 ui = require 'ui'
@@ -328,31 +326,28 @@ dismiss = ->
   m.redraw true
   ui.focusTextInput!
 
-module.exports =
-  invoke: invoke
-
-  dismiss: dismiss
-
-  view: (c) -> m 'div#ap-container', [
-    m 'div#ap-overlay',
-      onclick: -> dismiss!
-    m 'div#actionpad',
-      class: positioningClass!
-    , [
-      m 'div.target', renderTarget[as.mode!]!
-      m 'div.input', [
-        m 'input[type=text]',
-          config: (el, init, ctx) ->
-            if !init
-              el.focus!
-          onkeyup: m.withAttr 'value', as.input
-          onkeydown: controlKeys
-      ]
-      m 'div.actions-container',
+exports.invoke = invoke
+exports.dismiss = dismiss
+exports.view = (c) -> m 'div#ap-container', [
+  m 'div#ap-overlay',
+    onclick: -> dismiss!
+  m 'div#actionpad',
+    class: positioningClass!
+  , [
+    m 'div.target', renderTarget[as.mode!]!
+    m 'div.input', [
+      m 'input[type=text]',
         config: (el, init, ctx) ->
-          s = el.querySelector 'div.action.selected'
-          if s?
-            s.scrollIntoView false
-      , m 'div.actions', availableActions!.map renderAction
+          if !init
+            el.focus!
+        onkeyup: m.withAttr 'value', as.input
+        onkeydown: controlKeys
     ]
+    m 'div.actions-container',
+      config: (el, init, ctx) ->
+        s = el.querySelector 'div.action.selected'
+        if s?
+          s.scrollIntoView false
+    , m 'div.actions', availableActions!.map renderAction
   ]
+]

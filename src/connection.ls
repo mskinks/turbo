@@ -1,8 +1,8 @@
 # connection.ls -- communication with the server
 
-require! settings
 ui = require 'ui'
 logs = require 'logging'
+ad = require 'ads'
 settings = require 'settings'
 
 if module.hot
@@ -12,6 +12,8 @@ if module.hot
     ui := require 'ui'
   module.hot.accept 'logging', ->
     logs := require 'logging'
+  module.hot.accept 'ads', ->
+    ad := require 'ads'
 
 wsUrl = 'wss://chat.f-list.net:9799'
 
@@ -219,7 +221,7 @@ msgHandlers =
     logs.log 'channel', msg.channel, 'm', msg
   LRP: (msg) ->
     # received roleplaying ad
-    # TODO handle ads
+    ad.receive msg
   RLL: (msg) ->
     # dice roll / bottle spin
     # TODO handle dice rolls
@@ -294,25 +296,23 @@ window.disconnect = ->
   ws.close!
   ws := null
 
-module.exports =
-  send: ws-send
+exports.send = ws-send
 
-  connect: (aname, cname) ->
-    if ws? then return
-    ws := new WebSocket wsUrl
-    ws.onmessage = handleMessage
-    ws.onclose = -> state.chat.status null
-    ws.onopen = ->
-      ws-send 'IDN',
-        method: 'ticket'
-        account: aname
-        ticket: state.ticket!.ticket
-        character: cname
-        cname: 'Turbo'
-        cversion: 'dev'
+exports.connect = (aname, cname) ->
+  if ws? then return
+  ws := new WebSocket wsUrl
+  ws.onmessage = handleMessage
+  ws.onclose = -> state.chat.status null
+  ws.onopen = ->
+    ws-send 'IDN',
+      method: 'ticket'
+      account: aname
+      ticket: state.ticket!.ticket
+      character: cname
+      cname: 'Turbo'
+      cversion: 'dev'
 
-  disconnect: ->
-    if not ws? then return
-    ws.close!
-    ws := null
-
+exports.disconnect = ->
+  if not ws? then return
+  ws.close!
+  ws := null

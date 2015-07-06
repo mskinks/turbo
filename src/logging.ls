@@ -1,6 +1,5 @@
 # logging.ls -- everything to do with logging etc.
 
-require! state
 settings = require 'settings'
 
 if module.hot
@@ -197,11 +196,10 @@ getLogMonth = (osName, character, target, year, month, recvf) ->
 getLogs = (osName, character, target, date, recvf) ->
   db.getLogs ...
 
-module.exports =
-  log: log
-  addScrollback: addScrollback
-  getLogTargets: getLogTargets
-  getLogMonth: getLogMonth
-  getLogs: getLogs
-  available: -> available
+exports.log = log
+exports.addScrollback = addScrollback
+exports.getLogTargets = getLogTargets
+exports.getLogMonth = getLogMonth
+exports.getLogs = getLogs
+exports.available = -> available
 

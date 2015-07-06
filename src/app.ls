@@ -7,6 +7,7 @@ settings = require 'settings'
 logviewer = require 'logviewer'
 urlactions = require 'urlactions'
 kinksearch = require 'kinksearch'
+ads = require 'ads'
 
 # this is for debug, don't hot reload
 require! characters
@@ -22,6 +23,8 @@ if module.hot
     urlactions := require 'urlactions'
   module.hot.accept 'kinksearch', ->
     kinksearch := require 'kinksearch'
+  module.hot.accept 'ads', ->
+    ads := require 'ads'
   module.hot.accept 'channel', ->
     channel := require 'channel'
     # update all running channel renderers to new code
@@ -102,6 +105,8 @@ renderTab = (tab) ->
     return channelsearch.view!
   else if tab.type == 'kinksearch'
     return kinksearch.view!
+  else if tab.type == 'ads'
+    return ads.view!
   else if tab.type == 'characters'
     return characters.view!
   else

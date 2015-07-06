@@ -1,10 +1,6 @@
 # this causes webpack to compile and load the CSS
 require '../css-src/turbo.less'
 
-require! state
-# bind state to window so we can inspect it in the JS console
-window.state = state
-
 # load the login and app components. in development mode,
 # reload them on the fly whenever they change thanks to webpack dev server.
 login = require 'login'

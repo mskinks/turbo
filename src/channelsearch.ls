@@ -1,8 +1,5 @@
 # channelsearch.ls -- the channel search tab
 
-require! state
-conn = require 'connection'
-
 filters =
   search: m.prop ''
   show: m.prop ['channel', 'room']

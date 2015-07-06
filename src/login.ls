@@ -1,6 +1,4 @@
 # login.ls -- the login window
-require! state
-conn = require 'connection'
 
 logging = require 'logging'
 

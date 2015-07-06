@@ -1,13 +1,138 @@
-.Male { color: #09f; }
-.Female { color: #f36; }
-.Herm { color: #c0f; }
-.Shemale { color: #96f; }
+@c-male: #6699FF;
+@c-maleherm: #007FFF;
+@c-female: #FF6699;
+@c-herm: #9B30FF;
+@c-cunt-boy: #00CC66;
+@c-transgender: #EE8822;
+@c-shemale: #CC66FF;
+@c-none: #FFFFBB;
 
-div.user-list span.user {
-    display: block;
+.male { color: @c-male; }
+.maleherm { color: @c-maleherm; }
+.female { color: @c-female; }
+.herm { color: @c-herm; }
+.cunt-boy { color: @c-cunt-boy; }
+.transgender { color: @c-transgender; }
+.shemale { color: @c-shemale; }
+.none { color: @c-none; }
+
+span.user {
+    a { color: inherit; }
+}
+
+div.user-list {
+    padding: 3px;
+    span.user {
+        display: block;
+        white-space: nowrap;
+        overflow-x: hidden;
+        padding: 2px;
+
+        a:before {
+            content: '●';
+            margin-right: 0.4rem;
+            opacity: 0;
+        }
+
+        &.looking {
+            a:before {
+                color: @brand-success;
+                opacity: 1;
+            }
+        }
+
+        &.busy {
+            a:before {
+                color: @brand-warning;
+                opacity: 1;
+            }
+        }
+
+        &.dnd {
+            a:before {
+                color: @brand-danger;
+                opacity: 1;
+            }
+        }
+    }
 }
 
 span.noparse {
     font-family: monospace;
     font-size: 0.8em;
+}
+
+div.message {
+
+    span.timestamp {
+        color: @gray-light;
+        font-family: monospace;
+        font-size: 0.8em;
+        margin-right: 0.2rem;
+    }
+
+    &.m {
+        border-top: 1px solid @gray-dark;
+        padding: 2px;
+        padding-left: 5px;
+        span.user {
+            margin-right: 0.2em;
+
+            &:after {
+                margin-left: 0.1em;
+                content: '›'
+            }
+
+        }
+    }
+
+    &.act {
+        border-top: 1px solid @gray-dark;
+        padding: 2px;
+        border-left: 5px solid @gray;
+        border-radius: 5px;
+        span.user { font-style: italic; }
+        span.message { font-style: italic; }
+        &.long {
+            font-size: 0.95em;
+            background: linear-gradient(@gray-dark, @gray-darker);
+            position: relative;
+            padding: 0.5rem;
+            span.user { font-style: italic; }
+            span.message { font-style: normal; }
+            padding-bottom: 0.4em;
+            span.timestamp {
+                font-size: 0.7em;
+                position: absolute;
+                bottom: 0.2rem;
+                right: 0.2rem;
+            }
+        }
+    }
+
+    &.ad {
+        border-left: 5px solid @brand-warning;
+        border-top: 1px solid @brand-warning;
+        padding-left: 5px;
+        border-radius: 5px;
+        margin: 7px 0px;
+        span.user {
+
+            &:after {
+                margin-left: 1em;
+                color: @brand-warning;
+                content: 'ADVERTISEMENT';
+                font-size: 0.6em;
+            }
+        }
+        span.channel {
+            float: right;
+            padding-right: 5px;
+        }
+        span.message {
+            font-size: 0.9em;
+            display: block;
+            border-top: 1px solid @gray-light;
+        }
+    }
 }

@@ -74,6 +74,7 @@ div.app-tabs {
 
         li.tab {
             height: 40px;
+            white-space: nowrap;
             overflow-x: hidden;
             h5 { margin: 10px; }
             &.current {
@@ -93,6 +94,10 @@ div.app-tabs {
     &.active {
         background: linear-gradient(@gray-darker 70%, mix(@gray-darker, @brand-primary, 80%) 100%);
     }
+}
+
+div.settings {
+    padding: 1em;
 }
 
 div.channel {
@@ -244,5 +249,18 @@ div.kinksearch {
                 }
             }
         }
+    }
+}
+
+div.ad-viewer {
+    width: 100%;
+    display: flex;
+    flex-flow: row nowrap;
+    div.ad-filter {
+        flex: 0 0 25rem;
+    }
+    div.ad-display {
+        flex: 1;
+        overflow-y: scroll;
     }
 }

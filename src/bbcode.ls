@@ -23,6 +23,7 @@ tagmap =
     return '<a href="' + url + '" target="_blank">' + c + ' <span class="small">[' + domain + ']</span></a>'
   sub: (c, s, p) -> '<sub>' + c + '</sub>'
   sup: (c, s, p) -> '<sup>' + c + '</sup>'
+  user: (c, s, p) -> '<a href="https://www.f-list.net/c/' + c + '" class="profile-link" target="_blank">' + c + '</a>'
   channel: (c, s, p) -> '<a href="#channel/' + c + '" class="channel-link">' + c + '</a>'
   session: (c, s, p) -> '<a href="#channel/' + c + '" class="channel-link">' + p + '</a>'
 

@@ -1,7 +1,6 @@
 # keybindings.ls -- global (and maybe local) keybindings
 
 key = require 'keymaster'
-require! state
 
 actionpad = require 'actionpad'
 ui = require 'ui'

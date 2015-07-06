@@ -1,7 +1,5 @@
 # kinksearch.ls -- search for people with kinks.
 
-require! state
-conn = require 'connection'
 bbcode = require 'bbcode'
 r = require 'renderables'
 ui = require 'ui'

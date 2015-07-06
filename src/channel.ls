@@ -1,9 +1,6 @@
 # channel.ls -- reusable component for a chat channel.
 
-require! state
-
 bbcode = require 'bbcode'
-conn = require 'connection'
 r = require 'renderables'
 logging = require 'logging'
 settings = require 'settings'
@@ -38,7 +35,9 @@ Channel = (name) ->
   chan = state.chat.channels[name]
   logs = chan.logs
   users = ->
-    chan.users!.map (name) ->
+    _(chan.users!)
+    .sortBy (u) -> u.toLowerCase!
+    .value!.map (name) ->
       state.chat.characters[name] or { name: name }
   typed = m.prop ''
 

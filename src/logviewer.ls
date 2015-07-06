@@ -1,6 +1,5 @@
 # logviewer.ls -- the log viewer
 
-require! state
 require! settings
 require! moment
 logging = require 'logging'
