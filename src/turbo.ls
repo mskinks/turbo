@@ -1,4 +1,5 @@
 # this causes webpack to compile and load the CSS
+# require '../css-src/turbo.less'
 require '../css-src/turbo.less'
 
 # load the login and app components. in development mode,
