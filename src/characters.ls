@@ -3,6 +3,7 @@
 # but maybe this can be used somewhere...
 
 require! actionpad
+require! renderables
 
 ac =
   search: m.prop ''
@@ -23,22 +24,19 @@ module.exports =
       ]
       m '.list', [
         if ac.search!.length > 3 or ac.gendersearch!.length > 3
-          m 'table.table.table-striped', m 'tbody',
-            _.values(state.chat.characters)
+          m 'div',
+            _(_.values(state.chat.characters))
             .filter (char) ->
               if ac.gendersearch!.length > 3 and char.gender.toLowerCase!.indexOf(ac.gendersearch!.toLowerCase!) == -1
                 return false
               if ac.search!.length > 3 and char.name.toLowerCase!.indexOf(ac.search!.toLowerCase!) == -1
                 return false
               return true
-            .map (char) ->
-              m 'tr',
-                onclick: -> actionpad.invoke 'character', char.name
-              , [
-                m 'td', char.name
-                m 'td', char.gender
-                m 'td', char.status
-                m 'td', char.message
-              ]
+            .sortBy (c) -> c.name.toLowerCase!
+            .value!
+            .map (char) -> m 'span', [
+              m 'span', '- '
+              renderables.user char
+            ]
       ]
     ]
